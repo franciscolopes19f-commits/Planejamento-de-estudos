@@ -1,0 +1,4 @@
+node_modules/
+tests/e2e/screens/
+.DS_Store
+*.log

@@ -1,0 +1,58 @@
+# Publica o app no GitHub Pages e atualiza o radar de concursos automaticamente.
+# - A cada push na main: testa e publica.
+# - Duas vezes ao dia (06h17 e 18h17 de Brasília): consulta as fontes do radar,
+#   salva app/data/radar.json no repositório e republica o app.
+# Funciona com o app fechado, sem servidor próprio e sem credenciais extras (usa o GITHUB_TOKEN do Actions).
+name: Publicar app e atualizar radar
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 9,21 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Testes unitários
+        run: npm test
+      - name: Atualizar radar de concursos
+        if: github.event_name != 'push'
+        continue-on-error: true
+        run: node scripts/radar-update.mjs
+      - name: Salvar radar atualizado no repositório
+        if: github.event_name != 'push'
+        run: |
+          if ! git diff --quiet app/data/radar.json; then
+            git config user.name "radar-bot"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add app/data/radar.json
+            git commit -m "Radar: atualização automática $(TZ=America/Sao_Paulo date '+%d/%m/%Y %H:%M')"
+            git push
+          else
+            echo "Radar sem novidades."
+          fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app
+      - id: deploy
+        uses: actions/deploy-pages@v4

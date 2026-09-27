@@ -1,8 +1,8 @@
 // Service worker: permite abrir o app sem internet (cache dos arquivos estáticos).
-const VERSION = 'rumo-v1';
+const VERSION = 'rumo-v2';
 const ASSETS = ['./', 'index.html', 'css/app.css', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png',
   'icons/icon-512.png', 'data/radar.json',
-  'js/main.js', 'js/store.js', 'js/seed.js', 'js/demo.js', 'js/time.js', 'js/ui.js', 'js/radar.js', 'js/planner.js', 'js/stats.js', 'js/alerts.js', 'js/timer.js', 'js/sync.js',
+  'config.js', 'js/main.js', 'js/store.js', 'js/seed.js', 'js/demo.js', 'js/cloud.js', 'js/merge.js', 'js/routine.js', 'js/views/setup.js', 'js/time.js', 'js/ui.js', 'js/radar.js', 'js/planner.js', 'js/stats.js', 'js/alerts.js', 'js/timer.js',
   'js/views/today.js', 'js/views/plan.js', 'js/views/study.js', 'js/views/contests.js', 'js/views/evolution.js', 'js/views/reviews.js',
   'js/views/subjects.js', 'js/views/routine.js', 'js/views/settings.js', 'js/views/more.js'];
 

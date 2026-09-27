@@ -72,7 +72,7 @@ export default {
       const cs = (sb.contestIds || []).map(id => app.contest(id)?.orgao).filter(Boolean);
       return `<details class="card subject" data-id="${esc(sb.id)}" ${openState.has(sb.id) ? 'open' : ''}>
         <summary><div class="row between"><div style="min-width:0;flex:1"><h3>${esc(sb.nome)} ${sb.paused ? '<span class="chip">pausada</span>' : ''}</h3>
-          <div class="tiny muted">peso ${sb.peso} · dificuldade ${sb.dificuldade}${cs.length ? ' · ' + esc(cs.join(', ')) : ''}</div></div>
+          <div class="tiny muted">peso ${sb.peso} · dificuldade ${sb.dificuldade}${cs.length ? ' · ' + esc(cs.join(', ')) : ''}</div>${sb.hint && !sb.topics.length ? `<div class="tiny" style="color:var(--amber);margin-top:2px">${esc(sb.hint)}</div>` : ''}</div>
           <span class="small num muted">${d}/${sb.topics.length}</span></div>
           <div style="margin-top:8px">${progressBar(sb.topics.length ? d / sb.topics.length : 0)}</div></summary>
         <div style="margin-top:10px">

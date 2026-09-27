@@ -2,7 +2,7 @@
 import { esc, icon, openModal, closeModal, modalHead, formData, toast, confirmDialog } from '../ui.js';
 import { DOW_SHORT, todayISO, fmtDate, dow, hmToMin, fmtMin } from '../time.js';
 
-const TYPES = { escritorio: ['Escritório', 'blue'], faculdade: ['Faculdade', 'violet'], pessoal: ['Pessoal', 'amber'] };
+const TYPES = { escritorio: ['Trabalho', 'blue'], faculdade: ['Faculdade', 'violet'], deslocamento: ['Deslocamento', ''], pessoal: ['Pessoal', 'amber'] };
 const ORDER_DOWS = [1, 2, 3, 4, 5, 6, 0];
 
 const dowChecks = (sel = []) => `<div class="checks">${ORDER_DOWS.map(d => `<label><input type="checkbox" name="dows" value="${d}" ${sel.includes(d) ? 'checked' : ''}>${DOW_SHORT[d]}</label>`).join('')}</div>`;
@@ -53,7 +53,7 @@ export default {
     const isDone = t => (t.date ? t.done : (t.doneDates || []).includes(today));
     return `<h1>Minha rotina</h1>
     <p class="muted small" style="margin:6px 0 14px">Compromissos bloqueiam horários; as janelas verdes são onde o plano coloca as sessões de estudo. Mantenha simples: o foco é o estudo.</p>
-    <div class="row" style="margin-bottom:12px"><button class="btn sm primary" data-act="new-slot">${icon('plus')} Janela de estudo</button><button class="btn sm" data-act="new-ev">${icon('plus')} Compromisso</button><button class="btn sm" data-act="new-task">${icon('plus')} Tarefa / lembrete</button></div>
+    <div class="row" style="margin-bottom:12px"><button class="btn sm primary" data-act="new-slot">${icon('plus')} Janela de estudo</button><button class="btn sm" data-act="new-ev">${icon('plus')} Compromisso</button><button class="btn sm" data-act="new-task">${icon('plus')} Tarefa / lembrete</button><a class="btn sm ghost" href="#/configurar">${icon('settings')} Refazer configuração inicial</a></div>
     <div class="week">${perDay}</div>
 
     <div class="grid-2" style="margin-top:14px">

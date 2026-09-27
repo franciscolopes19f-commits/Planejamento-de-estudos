@@ -37,7 +37,7 @@ function emptyState() {
     simulados: [],
     appTime: {},       // 'YYYY-MM-DD' -> segundos com o app aberto e em uso
     alertsSeen: {},    // chave de alerta -> data em que foi notificado
-    sync: { enabled: false, gistId: '', lastSyncAt: null },
+    sync: { lastSyncAt: null },
     timer: null,
   };
 }
@@ -72,8 +72,8 @@ function migrate(s) {
 
 export function get() { return state || load(); }
 
-export function save() {
-  state.updatedAt = now().toISOString();
+export function save({ keepUpdatedAt = false } = {}) {
+  if (!keepUpdatedAt) state.updatedAt = now().toISOString();
   if (!memoryOnly) {
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { memoryOnly = true; }
   }
@@ -99,7 +99,9 @@ export function importJSON(text) {
   listeners.forEach(l => l(state));
 }
 
-export function replaceState(next) { state = migrate(next); save(); listeners.forEach(l => l(state)); }
+// Substitui o estado (ex.: dados vindos da nuvem) sem alterar a data de modificação,
+// para não provocar um "vai e volta" de sincronização entre aparelhos.
+export function replaceState(next) { state = migrate(next); save({ keepUpdatedAt: true }); listeners.forEach(l => l(state)); }
 
 export function resetAll() {
   state = emptyState();

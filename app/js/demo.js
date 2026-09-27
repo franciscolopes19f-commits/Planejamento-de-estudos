@@ -1,12 +1,15 @@
 // Modo demonstração (?demo=1): dados fictícios só na memória, para visualizar o app preenchido.
 // Nada é salvo no aparelho nesse modo.
 import { todayISO, addDays } from './time.js';
+import { exampleRoutine } from './seed.js';
 
 export function applyDemo(state, uid) {
   const today = todayISO();
   state.demo = true;
+  Object.assign(state, exampleRoutine(uid));
+  state.setupDone = true;
   state.profile.name = 'Visitante';
-  const subs = state.subjects;
+  const subs = state.subjects.filter(s => s.topics.length);
   let seed = 7;
   const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
   for (let i = 13; i >= 1; i--) {

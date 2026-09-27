@@ -64,7 +64,10 @@ export function targetContests(state, contests, today = todayISO()) {
   return contests
     .filter(c => state.my[c.id] && active.includes(state.my[c.id].status))
     .map(c => ({ ...c, examDate: c.prova && c.prova >= today ? c.prova : null }))
-    .sort((a, b) => (a.examDate || '9999').localeCompare(b.examDate || '9999'));
+    .sort((a, b) => {
+      const pa = a.id === state.profile.targetContestId ? 0 : 1, pb = b.id === state.profile.targetContestId ? 0 : 1;
+      return pa - pb || (a.examDate || '9999').localeCompare(b.examDate || '9999');
+    });
 }
 
 export function subjectPriority(subject, stats, examDays = null) {
@@ -76,9 +79,13 @@ export function subjectPriority(subject, stats, examDays = null) {
   return score;
 }
 
+// Concurso de referência da matéria: o prioritário (se a matéria cai nele) ou o de prova mais próxima.
 function examDaysFor(subject, targets, today) {
-  const t = targets.find(c => c.examDate && (!subject.contestIds?.length || subject.contestIds.includes(c.id)));
-  return t ? { days: diffDays(t.examDate, today), contestId: t.id } : { days: null, contestId: targets[0]?.id || null };
+  const applies = c => !subject.contestIds?.length || subject.contestIds.includes(c.id);
+  const prio = targets[0] && targets[0].id && applies(targets[0]) ? targets[0] : null;
+  const t = prio?.examDate ? prio : targets.find(c => c.examDate && applies(c));
+  const days = t ? diffDays(t.examDate, today) : prio ? 60 : null; // prioridade sem data de prova: trata como prova em ~2 meses
+  return { days, contestId: (prio || t || targets[0])?.id || null };
 }
 
 function lastModality(state, topicId) {

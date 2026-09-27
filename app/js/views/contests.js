@@ -238,6 +238,7 @@ function renderMine(app, today) {
         ${(my.datas || []).length ? `<div class="small">${my.datas.map(x => `<span class="chip">${esc(x.label || 'data')}: ${fmtDate(x.date, { short: true })}</span>`).join(' ')}</div>` : ''}
         ${my.comprovante || my.comprovanteArquivo ? `<div class="small muted">Comprovante: ${esc(my.comprovante || '')} ${my.comprovanteArquivo ? `<a href="${esc(my.comprovanteArquivo.data)}" download="${esc(my.comprovanteArquivo.name)}">${esc(my.comprovanteArquivo.name)}</a>` : ''}</div>` : ''}
         <div class="row">
+          ${s.profile.targetContestId === c.id ? `<span class="chip green">${icon('star')} Prioridade do plano</span>` : `<button class="btn sm ghost" data-act="priority" data-id="${esc(c.id)}">${icon('star')} Definir como prioridade</button>`}
           <select class="input" style="width:auto;min-height:36px;padding:6px 10px;font-size:14px" data-act="track" data-id="${esc(c.id)}" aria-label="Situação">${MY_STATUS.map(x => `<option value="${x.id}" ${my.status === x.id ? 'selected' : ''}>${x.label}</option>`).join('')}<option value="">Parar de acompanhar</option></select>
           <button class="btn sm primary" data-act="my-edit" data-id="${esc(c.id)}">${icon('edit')} Inscrição e alertas</button>
         </div>
@@ -278,6 +279,7 @@ export default {
       if (act === 'new') openContestEditor(app);
       if (act === 'edit') openContestEditor(app, c);
       if (act === 'my-edit') openTracking(app, c);
+      if (act === 'priority') { app.update(s => { s.profile.targetContestId = c.id; }, { silent: true }); app.regenerate(); toast(`${c.orgao} agora é a prioridade do plano.`); }
       if (act === 'hide' && await confirmDialog('Ocultar este concurso do radar?', { ok: 'Ocultar' })) app.update(s => { s.radarHidden.push(c.id); delete s.my[c.id]; });
       if (act === 'delete' && await confirmDialog('Excluir este concurso cadastrado?', { ok: 'Excluir', danger: true })) app.update(s => { s.contests = s.contests.filter(x => x.id !== c.id); delete s.my[c.id]; });
       if (act === 'from-news') {

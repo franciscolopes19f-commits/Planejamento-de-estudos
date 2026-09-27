@@ -8,7 +8,8 @@
     "start": "http-server app -p 8080 -c-1",
     "test": "node --test tests/unit/*.test.mjs",
     "test:e2e": "node tests/e2e/flows.mjs",
-    "radar": "node scripts/radar-update.mjs"
+    "radar": "node scripts/radar-update.mjs",
+    "test:sync": "node tests/e2e/sync.mjs"
   },
   "engines": {
     "node": ">=20"

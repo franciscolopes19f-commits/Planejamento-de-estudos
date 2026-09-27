@@ -2,7 +2,9 @@
 # - A cada push na main: testa e publica.
 # - Duas vezes ao dia (06h17 e 18h17 de Brasília): consulta as fontes do radar,
 #   salva app/data/radar.json no repositório e republica o app.
-# Funciona com o app fechado, sem servidor próprio e sem credenciais extras (usa o GITHUB_TOKEN do Actions).
+# Funciona com o app fechado, sem servidor próprio. Se as Variáveis SUPABASE_URL e SUPABASE_ANON_KEY
+# estiverem definidas no repositório, a publicação liga a sincronização e o agendamento também
+# faz uma consulta leve ao banco (registra atividade para o projeto gratuito não ser pausado).
 name: Publicar app e atualizar radar
 
 on:
@@ -49,6 +51,19 @@ jobs:
             git push
           else
             echo "Radar sem novidades."
+          fi
+      - name: Configurar conexão com o Supabase (se as Variáveis existirem)
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_ANON_KEY" ]; then
+            node -e 'const u=process.env.SUPABASE_URL.trim(),k=process.env.SUPABASE_ANON_KEY.trim();if(!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(u))throw new Error("SUPABASE_URL inválida");require("fs").writeFileSync("app/config.js","window.RUMO_CONFIG = "+JSON.stringify({supabaseUrl:u,supabaseAnonKey:k})+";\n")'
+            echo "Supabase configurado na publicação."
+            # consulta leve para registrar atividade no banco (evita pausa do projeto gratuito)
+            curl -fsS -X POST "${SUPABASE_URL%/}/rest/v1/rpc/rumo_ping" -H "apikey: $SUPABASE_ANON_KEY" -H "Content-Type: application/json" -d '{}' && echo " ← ping ok" || echo "Aviso: ping ao Supabase falhou (projeto pausado ou SQL não aplicado?)"
+          else
+            echo "Variáveis SUPABASE_URL/SUPABASE_ANON_KEY não definidas: publicando sem sincronização."
           fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

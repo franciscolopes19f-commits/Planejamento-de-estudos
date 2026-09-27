@@ -1,13 +1,8 @@
 // Testes de ponta a ponta dos fluxos principais, num navegador real (Chromium) com tela de iPhone.
 // Uso: npm start (em outro terminal) e depois npm run test:e2e   — ou defina BASE_URL.
-import { createRequire } from 'node:module';
 import { mkdirSync } from 'node:fs';
 import assert from 'node:assert/strict';
-
-const require = createRequire(import.meta.url);
-let playwright;
-try { playwright = require('playwright'); } catch { playwright = await import('/opt/node22/lib/node_modules/playwright/index.mjs'); }
-const { chromium, devices } = playwright;
+import { chromium, devices, completeSetup } from './helpers.mjs';
 
 const BASE = process.env.BASE_URL || 'http://localhost:8080/';
 const OUT = process.env.SHOTS_DIR || 'tests/e2e/screens';
@@ -32,10 +27,26 @@ const shot = name => page.screenshot({ path: `${OUT}/${name}.png`, fullPage: tru
 const noHScroll = async () => assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'sem rolagem horizontal');
 
 try {
-  await step('abre o painel inicial com “O que estudar hoje”', async () => {
+  await step('primeiro acesso abre a configuração inicial sem presumir horários', async () => {
     await page.goto(BASE);
-    await page.getByRole('heading', { name: 'O que estudar hoje' }).waitFor();
-    await page.getByTestId('iniciar-estudo').waitFor();
+    await page.getByRole('heading', { name: 'Configuração inicial' }).waitFor();
+    const s = await page.evaluate(() => window.rumo.state);
+    assert.equal(s.events.length, 0, 'sem compromissos de exemplo');
+    assert.equal(s.availability.length, 0, 'sem janelas de exemplo (nada de 6h ou almoço presumidos)');
+    assert.equal(s.profile.targetContestId, 'radar-queimados-2026-contador', 'Queimados como prioridade inicial');
+    // sem marcar períodos, não gera janelas
+    await page.fill('#cfg-acordo', '06:30'); await page.fill('#cfg-durmo', '23:00');
+    await page.getByTestId('salvar-config').click();
+    await page.getByText(/Nenhuma janela de estudo foi gerada/).waitFor();
+    await shot('00-configuracao');
+  });
+
+  await step('configuração inicial gera rotina e plano; painel mostra “O que estudar hoje”', async () => {
+    await completeSetup(page, BASE);
+    const s = await page.evaluate(() => window.rumo.state);
+    assert.ok(s.setupDone);
+    assert.ok(s.events.some(e => e.type === 'faculdade' && e.start === '18:20' && e.end === '22:00'), 'faculdade 18h20–22h');
+    assert.ok(!s.availability.some(a => a.start === '12:15'), 'almoço não marcado não vira janela');
     assert.ok(await page.locator('.hero .sess').count() >= 1, 'há sessões planejadas para hoje');
     await noHScroll();
     await shot('01-hoje');
@@ -57,6 +68,8 @@ try {
     await page.getByTestId('salvar-concurso').click();
     await page.locator('article.contest', { hasText: 'ISS Niterói' }).waitFor();
     assert.match(await page.locator('article.contest', { hasText: 'ISS Niterói' }).innerText(), /Inscrições abertas/);
+    const q = await page.locator('article.contest', { hasText: 'Prefeitura de Queimados' }).innerText();
+    assert.match(q, /Contador/); assert.match(q, /Fonte: Folha Dirigida/); assert.match(q, /conferido em 27\/09\/2026/); assert.match(q, /Notícia/);
     await shot('02-radar');
   });
 
@@ -69,7 +82,7 @@ try {
     await page.fill('#m-localProva', 'UFF – Campus Gragoatá');
     await page.getByTestId('salvar-acompanhamento').click();
     await page.goto(BASE + '#/concursos/meus');
-    const mine = page.locator('.kanban-col', { hasText: 'Inscrito' });
+    const mine = page.locator('.kanban-col', { has: page.locator('h3', { hasText: /^Inscrito/ }) });
     await mine.locator('article', { hasText: 'ISS Niterói' }).waitFor();
     assert.match(await mine.innerText(), /2026-000123/);
     assert.match(await mine.innerText(), /paga/);

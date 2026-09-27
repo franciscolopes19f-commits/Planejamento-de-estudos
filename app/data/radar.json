@@ -1,8 +1,29 @@
 {
-  "atualizadoEm": "2026-09-27T22:30:00-03:00",
-  "observacao": "Concursos conferidos manualmente em notícias de veículos especializados em 27/09/2026. Nenhum dado foi estimado: campos sem informação ficam em branco. Confirme sempre no edital oficial.",
+  "atualizadoEm": "2026-09-27T23:30:00-03:00",
+  "observacao": "Concursos conferidos manualmente em notícias de veículos especializados em 27/09/2026. Campos sem informação confirmada ficam em branco. Confirme sempre no edital oficial.",
   "fontes": [],
   "concursos": [
+    {
+      "id": "radar-queimados-2026-contador",
+      "orgao": "Prefeitura de Queimados",
+      "cargo": "Contador",
+      "local": "RJ",
+      "area": "contabil",
+      "banca": "IAN – Instituto de Avaliação Nacional",
+      "vagas": "6 + cadastro de reserva",
+      "remuneracao": 11567.11,
+      "taxa": 150,
+      "inscInicio": "2026-09-09",
+      "inscFim": "2026-10-13",
+      "prova": "",
+      "situacao": "abertas",
+      "link": "https://cdn.ian.org.br/edital/1/53/cdbb94c6408fdf016866f201450be4d5.pdf",
+      "confiabilidade": "noticia",
+      "fonte": "Folha Dirigida",
+      "fonteUrl": "https://folha.qconcursos.com/n/concurso-queimados-rj-2026-edital",
+      "conferidoEm": "2026-09-27",
+      "obs": "Edital publicado em 09/09/2026. Inscrições no site do IAN até 13/10; boleto até 14/10. Prova objetiva prevista para 20 ou 22/11/2026, conforme o cargo: confira no edital a data do Contador e preencha. Segundo as notícias, 40 questões (Português, Legislação Municipal e Conhecimentos Específicos) e avaliação de títulos classificatória. Não consegui abrir o PDF do edital para conferir."
+    },
     {
       "id": "radar-sefaz-sc-2026-auditor",
       "orgao": "SEFAZ SC",

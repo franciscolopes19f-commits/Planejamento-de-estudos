@@ -80,6 +80,7 @@ export default {
       <p class="muted small">${esc(fmtDate(today, { long: true }))} · horário de Brasília</p>
       <p class="quote">“${esc(fraseDoDia(today))}”</p>
     </div>
+    ${!s.setupDone && !s.demo ? `<div class="banner">${icon('clock')}<div><b>Falta a configuração inicial.</b> Informe seus horários de trabalho, faculdade, deslocamentos e sono para o app sugerir quando estudar. <a href="#/configurar">Configurar agora</a></div></div>` : ''}
     ${s.demo ? `<div class="banner blue">${icon('info')}<div><b>Modo demonstração:</b> estudos e acompanhamentos fictícios, apenas para visualizar o painel. Nada é salvo.${globalThis.RUMO_DEMO ? "" : ` <a href="./">Abrir com meus dados</a>`}</div></div>` : ''}
     ${comeback ? `<div class="banner green">${icon('sparkle')}<div>${esc(comeback)}</div></div>` : ''}
     ${late ? `<div class="banner">${icon('repeat')}<div><b>${late} sessão(ões) ficaram para trás.</b> Recupere sem sobrecarga: no máximo uma por dia. <a href="#/plano">Recuperar no plano</a></div></div>` : ''}

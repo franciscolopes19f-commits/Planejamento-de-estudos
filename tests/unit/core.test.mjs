@@ -7,13 +7,13 @@ import { createTimer, pause, resume, elapsedMs, tick, awayDecision, CONFIRM_GRAC
 import { computeAlerts, buildICS, contestCalendarItems } from '../../app/js/alerts.js';
 import { streak, weekMinutes } from '../../app/js/stats.js';
 import { _empty, uid } from '../../app/js/store.js';
-import { createSeed } from '../../app/js/seed.js';
+import { createSeed, exampleRoutine } from '../../app/js/seed.js';
 
 // "Agora" fixo: segunda-feira, 28/09/2026, 05:00 em Brasília (08:00 UTC)
 setClockOffset(Date.UTC(2026, 8, 28, 8, 0) - Date.now());
 const TODAY = '2026-09-28';
 
-function freshState() { const s = _empty(); Object.assign(s, createSeed(uid)); return s; }
+function freshState() { const s = _empty(); Object.assign(s, createSeed(uid), exampleRoutine(uid)); return s; }
 
 test('datas no horário de Brasília', () => {
   assert.equal(todayISO(new Date(Date.UTC(2026, 8, 28, 2, 30))), '2026-09-27'); // 23h30 em Brasília
@@ -97,13 +97,13 @@ test('recuperar pendentes sem bola de neve (máx. 1 por dia)', () => {
 
 test('revisões espaçadas 1/7/30 e ciclo de estudos', () => {
   const s = freshState();
-  const sub = s.subjects[0];
+  const sub = s.subjects.find(x => x.topics.length);
   scheduleReviews(s, { date: TODAY, subjectId: sub.id, topicId: sub.topics[0].id, modalidade: 'teoria' }, uid);
   assert.deepEqual(s.reviews.map(r => r.due), [addDays(TODAY, 1), addDays(TODAY, 7), addDays(TODAY, 30)]);
   scheduleReviews(s, { date: addDays(TODAY, 1), subjectId: sub.id, topicId: sub.topics[0].id, modalidade: 'revisao' }, uid);
   assert.equal(s.reviews.filter(r => r.done).length, 1);
   s.cycle = buildCycle(s, []);
-  assert.equal(s.cycle.items.length, s.subjects.length);
+  assert.equal(s.cycle.items.length, s.subjects.filter(x => x.topics.length).length);
   assert.equal(cycleProgress(s).pct, 0);
 });
 

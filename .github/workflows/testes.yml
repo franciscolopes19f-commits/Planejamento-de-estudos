@@ -1,0 +1,30 @@
+name: Testes
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Testes unitários
+        run: npm test
+      - name: Fluxos principais no navegador (tela de iPhone)
+        run: |
+          npx http-server app -p 8080 -s -c-1 &
+          sleep 2
+          npm run test:e2e
+          npm run test:sync
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: capturas-de-tela
+          path: tests/e2e/screens/

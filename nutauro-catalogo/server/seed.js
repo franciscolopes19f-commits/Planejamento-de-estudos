@@ -1,6 +1,7 @@
 // Dados iniciais: categorias sugeridas, seções da vitrine, banner com o mascote, páginas institucionais
 // em rascunho e — opcionalmente — poucos produtos ILUSTRATIVOS marcados como demonstração.
 
+import { gtinCheckDigit } from '../public/shared/gtin.js';
 import { saveProduct } from './admin-products.js';
 import { tx } from './db.js';
 
@@ -63,9 +64,17 @@ const DEMO = [
     variants: [[null, '300 g', 7990, null, 4500, 0]] },
 ];
 
+// Códigos fictícios na faixa 200–299 (GS1: circulação restrita/uso interno), para não coincidir com produtos reais.
+let demoSeq = 0;
+export function demoGtin(n = ++demoSeq) {
+  const body = `200${String(n).padStart(9, '0')}`;
+  return body + gtinCheckDigit(body);
+}
+
 /** Produtos de demonstração. Marcados com is_demo para remoção em um clique no painel. */
 export function seedDemoProducts(db) {
   if (db.prepare('SELECT COUNT(*) n FROM products').get().n > 0) return 0;
+  demoSeq = 0;
   for (const p of DEMO) {
     const saved = saveProduct(db, {
       name: p.name, brand_name: p.brand, category_name: p.cat, presentation: p.presentation, description: DESC,
@@ -73,6 +82,7 @@ export function seedDemoProducts(db) {
       variants: p.variants.map(([flavor, size, price, promo, cost, stock], i) => ({
         flavor, size, price_cents: price, promo_price_cents: promo, cost_cents: cost, initial_stock: stock,
         sku: `DEMO-${p.img.toUpperCase()}-${i + 1}`,
+        gtin: demoGtin(),
       })),
     });
     tx(db, () => {

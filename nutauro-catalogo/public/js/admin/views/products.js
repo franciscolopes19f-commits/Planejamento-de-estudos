@@ -299,7 +299,7 @@ export async function renderProductEditor(el, id) {
     btns.forEach((b) => (b.disabled = true));
     try {
       const r = await api('/products', { method: 'POST', body });
-      toast(status === 'active' ? 'Produto publicado na loja.' : 'Rascunho salvo.');
+      toast(status === 'active' ? (prod?.status === 'active' ? 'Alterações salvas na loja.' : 'Produto publicado na loja.') : 'Rascunho salvo.');
       if (!id) go(`/produtos/${r.product.id}`, { replace: true });
       else go(`/produtos/${id}`, { replace: true });
     } catch (e) {

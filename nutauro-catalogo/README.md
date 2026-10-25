@@ -79,12 +79,16 @@ ADMIN_EMAIL=voce@exemplo.com ADMIN_PASSWORD='uma-senha-forte' npm start
 
 ## 4. Versão de demonstração (arquivo único)
 
-`dist/nutauro-demo.html` abre direto no navegador, sem servidor: loja completa e painel (`#/admin`).
+`dist/nutauro-demo.html` abre direto no navegador, sem servidor: loja completa e painel (`#/admin`, ou o atalho
+`#painel`). `dist/catalogo-nutauro.html` é a mesma demonstração no formato de página publicada (link privado).
+Os produtos de demonstração usam códigos de barras fictícios da faixa 200 (uso interno GS1), e a tela de leitura
+lista códigos para testar. Sem câmera ao vivo (página publicada), use “Foto do código”: o celular tira a foto e o
+leitor decodifica.
 É gerada com `npm install && npm run build:demo` e usa um “servidor simulado” que guarda dados **só naquele
 navegador** — serve para avaliar telas e fluxos, não para vender. Na demonstração:
 
-- o pagamento pelo site é simulado (“Simular pagamento aprovado/recusado”);
-- o WhatsApp da loja não está configurado (não inventamos número), então a tela final mostra a mensagem pronta;
+- só o pedido pelo WhatsApp vem ligado; o pagamento simulado pode ser ligado no painel e nunca cobra nada;
+- o WhatsApp da loja não vem configurado (não inventamos número): cadastre o seu próprio número no painel para testar o envio;
 - consulta externa de código de barras, CEP, importação CSV e backup ficam desativados.
 
 ## 5. Configurar a loja

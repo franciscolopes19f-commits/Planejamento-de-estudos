@@ -53,6 +53,7 @@ function shell({ tab, title, back }) {
 async function route() {
   if (typeof state.cleanup === 'function') state.cleanup();
   state.cleanup = null;
+  if (!$('#app')) return;
   if (!state.user) return renderLogin();
   const { path } = current();
   for (const [re, fn, meta] of routes) {
@@ -107,8 +108,24 @@ function renderLogin(msg = '') {
   $('#l-email').focus();
 }
 
-async function boot() {
+const isActive = () => !window.NT_ACTIVE || window.NT_ACTIVE === 'admin';
+let listening = false;
+
+export async function boot() {
+  if (!listening) {
+    listening = true;
+    listen();
+  }
+  try {
+    const r = await api('/me');
+    state.user = r.user;
+  } catch { state.user = null; }
+  route();
+}
+
+function listen() {
   document.addEventListener('click', (e) => {
+    if (!isActive()) return;
     const a = e.target.closest('a[data-nav]');
     if (a && !e.metaKey && !e.ctrlKey) {
       e.preventDefault();
@@ -116,14 +133,9 @@ async function boot() {
       go(h.replace(/^#?\/admin/, '') || '/');
     }
   });
-  window.addEventListener('popstate', route);
+  window.addEventListener('popstate', () => { if (isActive()) route(); });
   window.addEventListener('nt:logout', () => { if (state.user) { state.user = null; renderLogin('Sua sessão expirou. Entre novamente.'); } });
   onNav(route);
-  try {
-    const r = await api('/me');
-    state.user = r.user;
-  } catch { state.user = null; }
-  route();
 }
 
 export async function logout() {
@@ -133,4 +145,4 @@ export async function logout() {
   go('/', { replace: true });
 }
 
-boot();
+if (!window.NT_DEMO) boot();

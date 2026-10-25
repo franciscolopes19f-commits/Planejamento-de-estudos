@@ -424,7 +424,7 @@ export async function renderCsv(el) {
     <h2 class="h2">Exportar</h2>
     <div class="card stack">
       <p class="small" style="margin:0">Planilha com uma linha por opção (sabor/tamanho), incluindo custo e estoque. Abre no Excel/Google Planilhas.</p>
-      <a class="btn btn--dark" href="/api/admin/export.csv" download>${icon('csv')} Baixar produtos (CSV)</a>
+      ${window.NT_DEMO ? '' : `<a class="btn btn--dark" href="/api/admin/export.csv" download>${icon('csv')} Baixar produtos (CSV)</a>`}
     </div>
     <h2 class="h2">Importar</h2>
     <div class="card stack">
@@ -435,7 +435,7 @@ export async function renderCsv(el) {
     <h2 class="h2">Cópia de segurança</h2>
     <div class="card stack">
       <p class="small" style="margin:0">Baixa uma cópia completa do banco (produtos, pedidos, clientes, estoque). Guarde em local seguro: contém dados pessoais de clientes.</p>
-      <a class="btn btn--ghost" href="/api/admin/backup" download>${icon('db')} Baixar backup</a>
+      ${window.NT_DEMO ? '' : `<a class="btn btn--ghost" href="/api/admin/backup" download>${icon('db')} Baixar backup</a>`}
     </div>`;
   let text = '';
   $('[data-file]', el).onchange = async (e) => {

@@ -6,7 +6,7 @@ import { modal, icon, esc } from './lib.js';
 import { validateGtin } from '/shared/gtin.js';
 
 let zxingLoading = null;
-function loadZxing() {
+export function loadZxing() {
   if (window.ZXing) return Promise.resolve(window.ZXing);
   zxingLoading ||= new Promise((resolve, reject) => {
     const s = document.createElement('script');
@@ -19,6 +19,7 @@ function loadZxing() {
 }
 
 export function cameraSupport() {
+  if (window.NT_DEMO) return { ok: false, reason: 'Na demonstração online o navegador não libera a câmera ao vivo. Use “Foto do código” ou digite o número.' };
   if (!window.isSecureContext) return { ok: false, reason: 'A câmera só funciona com o painel aberto em HTTPS.' };
   if (!navigator.mediaDevices?.getUserMedia) return { ok: false, reason: 'Este navegador não permite acesso à câmera.' };
   return { ok: true };
@@ -94,4 +95,22 @@ export function openScanner(onCode) {
     },
   });
   return () => { stop(); closeModal(); };
+}
+
+/** Lê o código a partir de uma foto (funciona mesmo sem câmera ao vivo: o celular abre a câmera nativa). */
+export async function decodeFromPhoto(file) {
+  const ZX = await loadZxing();
+  const hints = new Map();
+  hints.set(ZX.DecodeHintType.POSSIBLE_FORMATS, [ZX.BarcodeFormat.EAN_13, ZX.BarcodeFormat.EAN_8, ZX.BarcodeFormat.UPC_A, ZX.BarcodeFormat.UPC_E, ZX.BarcodeFormat.ITF]);
+  hints.set(ZX.DecodeHintType.TRY_HARDER, true);
+  const reader = new ZX.BrowserMultiFormatReader(hints);
+  const url = URL.createObjectURL(file);
+  try {
+    const res = await reader.decodeFromImageUrl(url);
+    return res.getText();
+  } catch {
+    throw new Error('Não foi possível ler o código nesta foto. Aproxime, evite reflexo e mantenha as barras na horizontal.');
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }

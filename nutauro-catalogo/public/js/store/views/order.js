@@ -60,7 +60,7 @@ export async function renderOrder(ctx, code) {
             : `Toque no botão para abrir o WhatsApp com a mensagem pronta e <b>envie a mensagem</b>. Os itens ficam reservados até <b>${esc(resUntil)}</b>.`}</p>
           ${o.whatsapp_url
             ? `<a class="btn btn--wa btn--block" href="${esc(o.whatsapp_url)}" target="_blank" rel="noopener">${WA_SVG} Abrir WhatsApp com o pedido</a>`
-            : `<div class="notice">${icon('info')}<span>O número de WhatsApp da loja ainda não foi configurado. ${window.NT_DEMO ? 'Na versão real este botão abre a conversa com a mensagem abaixo.' : 'Copie a mensagem e envie à loja.'}</span></div>`}
+            : `<div class="notice">${icon('info')}<span>O número de WhatsApp da loja ainda não foi configurado. ${window.NT_DEMO ? 'Para testar o envio, cadastre o seu próprio número no painel (Mais → Dados da loja) e faça um novo pedido. Abaixo está a mensagem que seria enviada.' : 'Copie a mensagem e envie à loja.'}</span></div>`}
           <p class="small muted" style="margin:10px 0">Abrir o WhatsApp não envia a mensagem automaticamente. O pedido só é confirmado depois da resposta da loja.</p>
           <details class="details"><summary>Ver mensagem</summary><div>
             <pre class="msg-preview" data-msg>${esc(o.whatsapp_message || '')}</pre>

@@ -423,8 +423,8 @@ A('GET', /^\/gtin\/(\d*)$/, (m, q) => {
   if (hit) { const { p, v } = findVariant(hit.id); return { validation: g, internal: { variant_id: v.id, product_id: p.id, product_name: p.name, flavor: v.flavor, size: v.size, stock: v.stock, status: p.status, image: p.images[0] } }; }
   if (!g.valid) return { validation: g, internal: null, external: [] };
   return { validation: g, internal: null, external: q.externo === '0' ? [] : [
-    { provider: 'openfoodfacts', label: 'Open Food Facts', status: 'error', error: 'Consulta externa não disponível nesta demonstração (precisa do servidor)' },
-    { provider: 'cosmos', label: 'Cosmos (Bluesoft)', status: 'not_configured' },
+    { provider: 'openfoodfacts', label: 'Open Food Facts', status: 'not_configured', error: 'não configurada nesta demonstração (funciona na versão com servidor)' },
+    { provider: 'cosmos', label: 'Cosmos (Bluesoft)', status: 'not_configured', error: 'não configurada (requer token contratado)' },
   ] };
 });
 A('POST', /^\/import$/, () => { throw bad('Importação CSV disponível apenas na versão com servidor.'); });

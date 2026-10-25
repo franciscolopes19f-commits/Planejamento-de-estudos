@@ -29,6 +29,7 @@ let cleanup = null;
 async function route({ replace } = {}) {
   const { path } = loc();
   const main = $('#main');
+  if (!main) return;
   if (typeof cleanup === 'function') cleanup();
   cleanup = null;
   document.body.classList.remove('no-fab');
@@ -204,8 +205,15 @@ async function addSingle(btn) {
 }
 
 // ---------- Inicialização
-async function boot() {
+// Na demonstração em arquivo único, loja e painel dividem a página: só o app ativo reage.
+const isActive = () => !window.NT_ACTIVE || window.NT_ACTIVE === 'store';
+let listening = false;
+
+function listenOnce() {
+  if (listening) return;
+  listening = true;
   document.addEventListener('click', (e) => {
+    if (!isActive()) return;
     const a = e.target.closest('a[href]');
     if (a && !a.target && !e.metaKey && !e.ctrlKey && !e.shiftKey && a.origin === location.origin) {
       const raw = a.getAttribute('href');
@@ -222,23 +230,27 @@ async function boot() {
     const add = e.target.closest('[data-add]');
     if (add) { e.preventDefault(); addSingle(add); }
   });
-  window.addEventListener('popstate', () => route({ replace: true }));
-  if (window.NT_DEMO) window.addEventListener('hashchange', () => route({ replace: true }));
+  window.addEventListener('popstate', () => { if (isActive()) route({ replace: true }); });
   onNavigate(route);
+  onNetChange((off) => {
+    const n = $('#net-status');
+    if (!n) return;
+    n.hidden = !off;
+    n.textContent = 'Você está sem conexão. Algumas informações podem estar desatualizadas.';
+  });
+  cart.subscribe(() => { if (isActive() && $('#cart-count')) updateCartCount(); });
+  window.addEventListener('resize', () => { if (isActive() && $('#hdr')) measureHeader(); });
+}
+
+export async function boot() {
+  listenOnce();
   $('#search-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const q = $('#q').value.trim();
     $('#q').blur();
     nav(`/produtos${q ? `?q=${encodeURIComponent(q)}` : ''}`);
   });
-  onNetChange((off) => {
-    const n = $('#net-status');
-    n.hidden = !off;
-    n.textContent = 'Você está sem conexão. Algumas informações podem estar desatualizadas.';
-  });
-  cart.subscribe(updateCartCount);
   updateCartCount();
-  window.addEventListener('resize', measureHeader);
   measureHeader();
 
   const main = $('#main');
@@ -257,4 +269,4 @@ async function boot() {
   route({ replace: true });
 }
 
-boot();
+if (!window.NT_DEMO) boot();

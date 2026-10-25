@@ -15,8 +15,9 @@ const db = openDb(':memory:');
 seedBase(db);
 seedDemoProducts(db);
 const settings = getSettings(db);
-settings.checkout.mode = 'both';
-settings.payments.provider = 'demo';
+// Demonstração: só pedido pelo WhatsApp; pagamento real desativado (o simulado pode ser ligado no painel).
+settings.checkout.mode = 'whatsapp';
+settings.payments.provider = 'none';
 const parse = (s, d) => { try { return s ? JSON.parse(s) : d; } catch { return d; } };
 const products = db.prepare('SELECT * FROM products').all().map((p) => ({
   ...p, images: parse(p.images_json, []), nutrition: parse(p.nutrition_json, null), data_source: parse(p.data_source_json, null),
@@ -67,6 +68,12 @@ const inline = (s) => s.replace(/\/(assets|fonts)\/[\w\-./]+\.(png|jpg|svg|woff2
 js = inline(js);
 const seedJson = inline(JSON.stringify(seed)).replace(/</g, '\\u003c');
 
+const zxing = fs.readFileSync(path.join(PUB, 'vendor/zxing.min.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
+const scripts = `<script>${zxing}</script>
+<script>window.NT_DEMO_SEED = ${seedJson};</script>
+<script>${js.replace(/<\/script/gi, '<\\/script')}</script>`;
+
+// a) Arquivo completo, para baixar e abrir no navegador
 const html = `<!doctype html>
 <html lang="pt-BR">
 <head>
@@ -78,11 +85,17 @@ const html = `<!doctype html>
 <style id="app-css"></style>
 </head>
 <body>
-<script>window.NT_DEMO_SEED = ${seedJson};</script>
-<script>${js.replace(/<\/script/gi, '<\\/script')}</script>
+${scripts}
 </body>
 </html>`;
+// b) Fragmento para página publicada (o publicador acrescenta doctype, head e body)
+const fragment = `<title>Catálogo Nutauro</title>
+<meta name="robots" content="noindex">
+<style id="app-css"></style>
+${scripts}
+`;
 fs.mkdirSync(path.join(ROOT, 'dist'), { recursive: true });
 const file = path.join(ROOT, 'dist/nutauro-demo.html');
 fs.writeFileSync(file, html);
-console.log(`Demonstração gerada: ${path.relative(ROOT, file)} (${(html.length / 1024).toFixed(0)} KB)`);
+fs.writeFileSync(path.join(ROOT, 'dist/catalogo-nutauro.html'), fragment);
+console.log(`Demonstração gerada: ${path.relative(ROOT, file)} (${(html.length / 1024).toFixed(0)} KB) e dist/catalogo-nutauro.html`);

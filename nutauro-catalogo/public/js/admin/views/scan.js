@@ -1,7 +1,7 @@
 import { api, $, esc, icon, link, go, toast, modal } from '../lib.js';
-import { openScanner, cameraSupport } from '../scanner.js';
+import { openScanner, cameraSupport, decodeFromPhoto } from '../scanner.js';
 import { openMoveModal } from './stock.js';
-import { validateGtin, normalizeGtin } from '/shared/gtin.js';
+import { validateGtin, normalizeGtin, gtinCheckDigit } from '/shared/gtin.js';
 
 const FIELD_LABEL = { name: 'Nome', brand: 'Marca', size: 'Peso/volume', description: 'Descrição', ingredients: 'Ingredientes', image_url: 'Foto', flavor: 'Sabor' };
 
@@ -17,16 +17,32 @@ export async function renderScan(el) {
       <label for="gtin" class="lbl" style="color:#fff">Código de barras</label>
       <form data-form class="stack" style="margin-top:6px">
         <input class="input mono" id="gtin" inputmode="numeric" autocomplete="off" placeholder="Digite ou use o leitor" enterkeyhint="search">
+        ${cam.ok ? `<button type="button" class="btn btn--block" data-cam>${icon('camera')} Ler com a câmera</button>` : ''}
         <div class="grid2">
-          <button type="button" class="btn" data-cam ${cam.ok ? '' : 'disabled'}>${icon('camera')} Câmera</button>
+          <label class="btn ${cam.ok ? 'btn--ghost' : ''}" style="cursor:pointer">${icon('img')} Foto do código<input type="file" accept="image/*" capture="environment" data-photo hidden></label>
           <button type="submit" class="btn btn--ghost">Consultar</button>
         </div>
       </form>
-      <p class="xs" style="color:#bdbbb2;margin:8px 0 0">${cam.ok ? 'Leitor físico (USB/Bluetooth): mantenha o cursor no campo e faça a leitura.' : esc(cam.reason) + ' Digite o código ou use um leitor físico.'}</p>
+      <p class="xs" style="color:#bdbbb2;margin:8px 0 0">${cam.ok ? 'Leitor físico (USB/Bluetooth): mantenha o cursor no campo e faça a leitura.' : esc(cam.reason)} “Foto do código” abre a câmera do celular; tire a foto bem de perto.</p>
     </div>
+    <div data-demo-codes></div>
     <div data-result style="margin-top:14px" aria-live="polite"></div>`;
   const input = $('#gtin', el);
   input.focus();
+
+  // Demonstração: códigos FICTÍCIOS (faixa 200, uso interno) para testar sem embalagem em mãos.
+  if (window.NT_DEMO) {
+    const { products } = await api('/products');
+    const known = products.filter((p) => p.gtins.length).slice(0, 3).map((p) => [p.gtins[0], p.name]);
+    const unknownBody = '200000099999';
+    const unknown = unknownBody + gtinCheckDigit(unknownBody);
+    $('[data-demo-codes]', el).innerHTML = `<div class="card small" style="margin-top:12px"><b>Códigos fictícios para testar</b>
+      <p class="muted" style="margin:4px 0 8px">Toque para consultar. Os produtos de demonstração usam códigos de uso interno, que não pertencem a produtos reais.</p>
+      <div class="row">${known.map(([c, n]) => `<button type="button" class="fchip" data-try="${c}">${esc(c)} · ${esc(n)}</button>`).join('')}
+      <button type="button" class="fchip" data-try="${unknown}">${unknown} · não cadastrado</button>
+      <button type="button" class="fchip" data-try="2000000099990">2000000099990 · dígito errado</button></div></div>`;
+    $('[data-demo-codes]', el).onclick = (e) => { const b = e.target.closest('[data-try]'); if (b) lookup(b.dataset.try); };
+  }
 
   async function lookup(raw) {
     const code = normalizeGtin(raw);
@@ -75,6 +91,7 @@ export async function renderScan(el) {
     out.innerHTML = `
       <div class="card"><b>${esc(g.type)} ${esc(code)}</b> <span class="pill pill--warn">Novo na loja</span>
         <p class="small muted" style="margin:6px 0 0">Ler o código não traz todos os dados automaticamente. Revise e complete antes de publicar.</p></div>
+      ${!found.length ? `<div class="card card--warn small">${icon('alert')} <b>Nenhuma consulta externa trouxe dados.</b> ${results.some((x) => x.status === 'found' || x.status === 'not_found') ? '' : 'A consulta externa não está configurada ou disponível aqui. '}Preencha os dados a partir da embalagem em “Cadastro manual”.</div>` : ''}
       ${found.map((x, i) => `
         <div class="card">
           <div class="row row--between"><span class="src-tag">${icon('db')} ${esc(x.label)}</span>${x.cached ? '<span class="xs muted">consulta salva</span>' : ''}</div>
@@ -146,5 +163,14 @@ export async function renderScan(el) {
   }
 
   $('[data-form]', el).addEventListener('submit', (e) => { e.preventDefault(); lookup(input.value); });
-  $('[data-cam]', el).addEventListener('click', () => openScanner((code) => lookup(code)));
+  $('[data-cam]', el)?.addEventListener('click', () => openScanner((code) => lookup(code)));
+  $('[data-photo]', el).addEventListener('change', async (e) => {
+    const f = e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    const out = $('[data-result]', el);
+    out.innerHTML = '<div class="card empty"><div class="spinner" style="margin:auto"></div><p class="small">Lendo o código na foto…</p></div>';
+    try { lookup(await decodeFromPhoto(f)); }
+    catch (err) { out.innerHTML = `<div class="card card--danger small">${esc(err.message)} Você também pode digitar o número abaixo das barras.</div>`; }
+  });
 }
